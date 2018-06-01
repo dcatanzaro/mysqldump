@@ -209,12 +209,17 @@ module.exports = function(options,done){
 				run.push(function(callback){
 					var opts = {cols:'*', from:"`"+table+"`"};
 					if ((options.where != null) && (typeof options.where[table] != 'undefined')) {
-						opts.where = options.where[table];
+						mysql.query(options.where[table],function(err,data){
+							if (err) return callback(err);
+							callback(err,buildInsert(data,table));
+						}, typeCastOptions);
+					} else {
+						mysql.select(opts,function(err,data){
+							if (err) return callback(err);
+							callback(err,buildInsert(data,table));
+						}, typeCastOptions);
 					}
-					mysql.select(opts,function(err,data){
-						if (err) return callback(err);
-						callback(err,buildInsert(data,table));
-					}, typeCastOptions);
+					
 				});
 			});
 			async.parallel(run,callback)
